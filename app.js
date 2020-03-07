@@ -63,7 +63,7 @@ passport.use(new GoogleStrategy({
   },
   function(accessToken, refreshToken, profile, cb) {
       console.log(profile);
-    User.findOrCreate({ googleId: profile.id, username: profile.id}, function (err, user) {
+    User.findOrCreate({ googleId: profile.id, username: profile.emails[0].value}, function (err, user) {
       return cb(err, user);
     });
   }
@@ -72,11 +72,12 @@ passport.use(new GoogleStrategy({
 passport.use(new FacebookStrategy({
     clientID: process.env.FACEBOOK_APP_ID,
     clientSecret: process.env.FACEBOOK_APP_SECRET,
-    callbackURL: "http://localhost:3000/auth/facebook/secrets"
+    callbackURL: "http://localhost:3000/auth/facebook/secrets",
+    profileFields: ["id", "displayName", "email", "first_name", "middle_name", "last_name"]
   },
   function(accessToken, refreshToken, profile, cb) {
       console.log(profile);
-    User.findOrCreate({ facebookId: profile.id, username: profile.id }, function (err, user) {
+    User.findOrCreate({ facebookId: profile.id, username: profile.emails[0].value }, function (err, user) {
       return cb(err, user);
     });
   }
@@ -87,11 +88,11 @@ app.get("/", function(req, res){
 });
 
 app.get("/auth/google",
-    passport.authenticate("google", { scope: ["profile"]})
+    passport.authenticate("google", { scope: ["profile", "email"]})
 );
 
 app.get('/auth/facebook',
-  passport.authenticate('facebook'));
+  passport.authenticate('facebook', {scope: "email"}));
 
 app.get("/auth/google/secrets", 
   passport.authenticate("google", { failureRedirect: "/login" }),
